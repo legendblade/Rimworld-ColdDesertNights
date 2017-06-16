@@ -4,7 +4,6 @@ using System.Linq;
 using Harmony;
 using HugsLib;
 using RimWorld;
-using UnityEngine.SceneManagement;
 using Verse;
 
 namespace ColdDesertNights
@@ -30,11 +29,6 @@ namespace ColdDesertNights
             GetBiomes();
         }
 
-        public override void SceneLoaded(Scene scene)
-        {
-            Logger.Trace($"Scene loaded {scene}");
-        }
-
         [HarmonyPatch(typeof(GenTemperature), nameof(GenTemperature.OffsetFromSunCycle))]
         // ReSharper disable once UnusedMember.Global
         public static class OffsetFromSunCyclePatch
@@ -54,7 +48,6 @@ namespace ColdDesertNights
                     Log.Error($"Error getting biome for tile {tile} on world grid due to {e} - {e.StackTrace}");
                     return true;
                 }
-                // Log.Message($"num: {num}, f: {f}, result: {__result}");
             }
         }
 
