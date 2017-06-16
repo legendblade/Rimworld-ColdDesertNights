@@ -10,7 +10,7 @@ using Verse;
 namespace ColdDesertNights
 {
     // ReSharper disable once ClassNeverInstantiated.Global
-    public partial class Main : ModBase
+    public class Main : ModBase
     {
         /// <summary>
         /// Gets the mod's identifier

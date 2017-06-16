@@ -1,15 +1,9 @@
-﻿using HugsLib;
-
-namespace ColdDesertNights
+﻿namespace ColdDesertNights
 {
-
-    public partial class Main : ModBase
+    public enum TemperatureFunctions
     {
-        public enum TemperatureFunctions
-        {
-            Vanilla,
-            Flatter,
-            Flattest
-        }
+        Vanilla,
+        Flatter,
+        Flattest
     }
 }
