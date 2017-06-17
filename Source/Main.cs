@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using ColdDesertNights.Utility;
 using Harmony;
 using HugsLib;
 using RimWorld;
@@ -56,9 +57,16 @@ namespace ColdDesertNights
         /// </summary>
         private void GetBiomes()
         {
-            BiomeSettings =
-                DefDatabase<BiomeDef>.AllDefs.Where(b => b.implemented && b.canBuildBase)
-                    .ToDictionary(t => t, v => new BiomeData(Settings, v));
+            // Get our biome list
+            var biomes = DefDatabase<BiomeDef>.AllDefs.Where(b => b.implemented && b.canBuildBase).ToList();
+
+            // Set our visibility field:
+            var currentBiomeSetting = Settings.GetHandle("tempCurBiome", "Biome".Translate(),
+                "ColdDesertNights_BiomeSelector".Translate(), biomes.First());
+            currentBiomeSetting.Unsaved = true;
+            currentBiomeSetting.CustomDrawer = new ListTypeDrawer<BiomeDef>(currentBiomeSetting, biomes, b => b.label).Draw;
+
+            BiomeSettings = biomes.ToDictionary(t => t, v => new BiomeData(Settings, v, () => currentBiomeSetting.Value.Equals(v)));
         }
     }
 }

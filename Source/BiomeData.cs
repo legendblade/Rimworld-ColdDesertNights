@@ -40,7 +40,8 @@ namespace ColdDesertNights
         /// </summary>
         /// <param name="settings">The setting pack to use</param>
         /// <param name="biome">The biome to base this off of</param>
-        public BiomeData(ModSettingsPack settings, BiomeDef biome)
+        /// <param name="visibilityFunc">Function which returns if we should display this now</param>
+        public BiomeData(ModSettingsPack settings, BiomeDef biome, SettingHandle.ShouldDisplay visibilityFunc)
         {
             // Create our settings handles:
             settingFunc = settings.GetHandle($"temp_func_{Regex.Replace(biome.label, "[^A-Za-z]", "")}",
@@ -65,6 +66,10 @@ namespace ColdDesertNights
             settingFunc.OnValueChanged += UpdateFunction;
             settingMultiplier.OnValueChanged += value => RecalculateMultiplierAndOffset();
             settingOffset.OnValueChanged += value => RecalculateMultiplierAndOffset();
+
+            // Set our visibility predicates:
+            settingFunc.VisibilityPredicate =
+                settingMultiplier.VisibilityPredicate = settingOffset.VisibilityPredicate = visibilityFunc;
         }
 
         /// <summary>
