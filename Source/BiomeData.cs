@@ -43,20 +43,51 @@ namespace ColdDesertNights
         /// <param name="visibilityFunc">Function which returns if we should display this now</param>
         public BiomeData(ModSettingsPack settings, BiomeDef biome, SettingHandle.ShouldDisplay visibilityFunc)
         {
+            // Build out the key:
+            var key = Regex.Replace(biome.defName, "[^A-Za-z]", "");
+
             // Create our settings handles:
-            settingFunc = settings.GetHandle($"temp_func_{Regex.Replace(biome.label, "[^A-Za-z]", "")}",
+            settingFunc = settings.GetHandle($"temp_func_{key}",
                 "ColdDesertNights_Function".Translate(GenText.ToTitleCaseSmart(biome.label)),
                 "ColdDesertNights_Function_Desc".Translate(),
                 TemperatureFunctions.Vanilla, null, "ColdDesertNights_Function_Enum_");
             settingMultiplier = settings.GetHandle(
-                $"temp_multiplier_{Regex.Replace(biome.label, "[^A-Za-z]", "")}",
+                $"temp_multiplier_{key}",
                 "ColdDesertNights_Multiplier".Translate(GenText.ToTitleCaseSmart(biome.label)),
                 "ColdDesertNights_Multiplier_Desc".Translate(), 14.0f,
                 Validators.FloatRangeValidator(-200, 200));
-            settingOffset = settings.GetHandle($"temp_offset_{Regex.Replace(biome.label, "[^A-Za-z]", "")}",
+            settingOffset = settings.GetHandle($"temp_offset_{key}",
                 "ColdDesertNights_Offset".Translate(GenText.ToTitleCaseSmart(biome.label)),
                 "ColdDesertNights_Offset_Desc".Translate(), 0.0f,
                 Validators.FloatRangeValidator(-200, 200));
+
+            // Port things from the v1 labeling:
+            var v1Key = Regex.Replace(biome.label, "[^A-Za-z]", ""); // <-- This was a bad plan.
+
+            if (!string.IsNullOrEmpty(v1Key))
+            {
+                var oldFunc = settings.PeekValue($"temp_func_{v1Key}");
+                if (oldFunc != null && settingFunc.HasDefaultValue())
+                {
+                    settingFunc.StringValue = oldFunc;
+                    settings.TryRemoveUnclaimedValue($"temp_func_{v1Key}");
+                }
+
+                var oldMult = settings.PeekValue($"temp_multiplier_{v1Key}");
+                if (oldMult != null && settingMultiplier.HasDefaultValue())
+                {
+                    settingMultiplier.StringValue = oldMult;
+                    settings.TryRemoveUnclaimedValue($"temp_multiplier_{v1Key}");
+                }
+
+                var oldOffset = settings.PeekValue($"temp_offset_{v1Key}");
+                if (oldOffset != null && settingOffset.HasDefaultValue())
+                {
+                    settingOffset.StringValue = settings.PeekValue($"temp_offset_{v1Key}");
+                    settings.TryRemoveUnclaimedValue($"temp_offset_{v1Key}");
+                }
+            }
+
 
             // And use them to init our values...
             UpdateFunction(settingFunc.Value);
