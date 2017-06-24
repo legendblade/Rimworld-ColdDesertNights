@@ -1,13 +1,28 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <LanguageData>
-  <ColdDesertNights_Function>{0} Function</ColdDesertNights_Function>
+  <ColdDesertNights_Function>Function</ColdDesertNights_Function>
   <ColdDesertNights_Function_Desc>The temperature function for this biome; the flatter you go, the more sharply temperature drops off at night and rises during the day, but the more CPU intensive the calculation is.</ColdDesertNights_Function_Desc>
-  <ColdDesertNights_Multiplier>{0} Day-Night Difference</ColdDesertNights_Multiplier>
+  <ColdDesertNights_Multiplier>Day-Night Difference</ColdDesertNights_Multiplier>
   <ColdDesertNights_Multiplier_Desc>The degrees Celsius that the temperature will drop between the hottest point in the day and the coldest point in the night (default 14).</ColdDesertNights_Multiplier_Desc>
-  <ColdDesertNights_Offset>{0} Offset</ColdDesertNights_Offset>
+  <ColdDesertNights_Offset>Offset</ColdDesertNights_Offset>
   <ColdDesertNights_Offset_Desc>The Celsius temperature offset for this biome (default 0).  At 0, this will produce days which are just as hot as vanilla, but adjust nights down by the difference set above.  Positive values will produce warmer days and nights, while negative values will produce colder days and nights.</ColdDesertNights_Offset_Desc>
   <ColdDesertNights_Function_Enum_Vanilla>Vanilla</ColdDesertNights_Function_Enum_Vanilla>
   <ColdDesertNights_Function_Enum_Flatter>Flatter (slower)</ColdDesertNights_Function_Enum_Flatter>
   <ColdDesertNights_Function_Enum_Flattest>Flattest (slowest)</ColdDesertNights_Function_Enum_Flattest>
   <ColdDesertNights_BiomeSelector>Choose which biome to modify</ColdDesertNights_BiomeSelector>
+  <ColdDesertNights_BiomeWeather>Chance of {0}</ColdDesertNights_BiomeWeather>
+  <ColdDesertNights_BiomeWeather_Desc>The weight this weather has when choosing a type of weather (default {0}).  At 0, this will completely disable the given weather in this biome.  
+  
+  Note:
+  - This does not allow rain to occur at less than 0 degrees Celsius, nor snow to occur at temperatures higher than 0 degrees.
+  - Disabling all rain/snow in a biome will also prevent RimWorld from automatically putting out fires.</ColdDesertNights_BiomeWeather_Desc>
+  <ColdDesertNights_DefaultBiomeWeather>Default Weather</ColdDesertNights_DefaultBiomeWeather>
+  <ColdDesertNights_DefaultBiomeWeather_Desc>The weather to fall back to if none could be chosen based on various weights and factors (default: Clear).</ColdDesertNights_DefaultBiomeWeather_Desc>
+  <ColdDesertNights_IgnoreRainLimit>Ignore Rain Limit</ColdDesertNights_IgnoreRainLimit>
+  <ColdDesertNights_IgnoreRainLimit_Desc>If the game is allowed to choose rain even if it just rained (default: unchecked).</ColdDesertNights_IgnoreRainLimit_Desc>
+  <ColdDesertNights_WeatherTempMin>Min Weather Temperature</ColdDesertNights_WeatherTempMin>
+  <ColdDesertNights_WeatherTempMin_Desc>The minimum temperature in degrees Celsius we should pretend it currently is when choosing weather (ie: set this to 1 to force rain even at freezing temperatures; default -999)</ColdDesertNights_WeatherTempMin_Desc>
+  <ColdDesertNights_WeatherTempMax>Max Weather Temperature</ColdDesertNights_WeatherTempMax>
+  <ColdDesertNights_WeatherTempMax_Desc>The maximum temperature in degrees Celsius we should pretend it currently is when choosing weather (ie: set this to -1 to force snow even at non-freezing temperatures; default 999)</ColdDesertNights_WeatherTempMax_Desc>
+  
 </LanguageData>

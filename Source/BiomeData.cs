@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text.RegularExpressions;
 using HugsLib.Settings;
 using RimWorld;
@@ -28,11 +29,15 @@ namespace ColdDesertNights
         private Func<float, float, float> function;
         private float multiplier;
         private float offset;
+        private readonly Dictionary<WeatherDef, SettingHandle<float>> weatherCommonalities = new Dictionary<WeatherDef, SettingHandle<float>>();
 
         // Our setting handles
         private readonly SettingHandle<TemperatureFunctions> settingFunc;
         private readonly SettingHandle<float> settingMultiplier;
         private readonly SettingHandle<float> settingOffset;
+        private readonly SettingHandle<bool> settingIgnoreRainLimit;
+        private readonly SettingHandle<float> minWeatherTemperature;
+        private readonly SettingHandle<float> maxWeatherTemperature;
 
         /// <summary>
         /// Initializes the biome data from the given <see cref="ModSettingsPack"/> settings
@@ -41,7 +46,8 @@ namespace ColdDesertNights
         /// <param name="settings">The setting pack to use</param>
         /// <param name="biome">The biome to base this off of</param>
         /// <param name="visibilityFunc">Function which returns if we should display this now</param>
-        public BiomeData(ModSettingsPack settings, BiomeDef biome, SettingHandle.ShouldDisplay visibilityFunc)
+        /// <param name="weathers"></param>
+        public BiomeData(ModSettingsPack settings, BiomeDef biome, SettingHandle.ShouldDisplay visibilityFunc, List<WeatherDef> weathers)
         {
             // Build out the key:
             var key = Regex.Replace(biome.defName, "[^A-Za-z]", "");
@@ -60,6 +66,35 @@ namespace ColdDesertNights
                 "ColdDesertNights_Offset".Translate(GenText.ToTitleCaseSmart(biome.label)),
                 "ColdDesertNights_Offset_Desc".Translate(), 0.0f,
                 Validators.FloatRangeValidator(-200, 200));
+
+            // Per-biome rain and snowfall multipliers
+            foreach (var weather in weathers)
+            {
+                var curCommonality =
+                    biome.baseWeatherCommonalities.FirstOrDefault(wc => wc.weather == weather)?.commonality ?? 0f;
+                var setting = settings.GetHandle($"weather_{key}_{weather.defName}",
+                    "ColdDesertNights_BiomeWeather".Translate(GenText.ToTitleCaseSmart(weather.label)),
+                    "ColdDesertNights_BiomeWeather_Desc".Translate(curCommonality), curCommonality,
+                    Validators.FloatRangeValidator(0f, float.MaxValue));
+                setting.VisibilityPredicate = visibilityFunc;
+                weatherCommonalities[weather] = setting;
+            }
+
+            // If we're allowed to bypass the rain limits
+            settingIgnoreRainLimit = settings.GetHandle(
+                $"ignore_rain_limit_{key}",
+                "ColdDesertNights_IgnoreRainLimit".Translate(),
+                "ColdDesertNights_IgnoreRainLimit_Desc".Translate(), false);
+
+            // Force weather into the given range
+            minWeatherTemperature = settings.GetHandle(
+                $"weather_temp_min_{key}",
+                "ColdDesertNights_WeatherTempMin".Translate(),
+                "ColdDesertNights_WeatherTempMin_Desc".Translate(), -999f);
+            maxWeatherTemperature = settings.GetHandle(
+                $"weather_temp_max_{key}",
+                "ColdDesertNights_WeatherTempMax".Translate(),
+                "ColdDesertNights_WeatherTempMax_Desc".Translate(), 999f);
 
             // Port things from the v1 labeling:
             var v1Key = Regex.Replace(biome.label, "[^A-Za-z]", ""); // <-- This was a bad plan.
@@ -100,7 +135,11 @@ namespace ColdDesertNights
 
             // Set our visibility predicates:
             settingFunc.VisibilityPredicate =
-                settingMultiplier.VisibilityPredicate = settingOffset.VisibilityPredicate = visibilityFunc;
+                settingMultiplier.VisibilityPredicate = 
+                settingOffset.VisibilityPredicate = 
+                settingIgnoreRainLimit.VisibilityPredicate =
+                minWeatherTemperature.VisibilityPredicate = 
+                maxWeatherTemperature.VisibilityPredicate = visibilityFunc;
         }
 
         /// <summary>
@@ -111,6 +150,35 @@ namespace ColdDesertNights
         public float CalculateTemp(float input)
         {
             return function.Invoke(input, multiplier) + offset;
+        }
+
+        /// <summary>
+        /// Forces the choice weather to be within the given temperature bounds
+        /// </summary>
+        /// <param name="input">The input value</param>
+        /// <returns>The bounded input</returns>
+        public float BoundWeatherTemp(float input)
+        {
+            return Mathf.Max(Mathf.Min(input, minWeatherTemperature.Value), maxWeatherTemperature.Value);
+        }
+
+        /// <summary>
+        /// Adjusts the weather's commonality based on the percent settings
+        /// </summary>
+        /// <param name="weather">The weather to check</param>
+        /// <returns>The adjusted commonality</returns>
+        public float GetWeatherCommonality(WeatherDef weather)
+        {
+            return weatherCommonalities[weather];
+        }
+
+        /// <summary>
+        /// Checks if we can ignore the rain limit
+        /// </summary>
+        /// <returns>True if we can; false otherwise</returns>
+        public bool CanIgnoreRainLimits()
+        {
+            return settingIgnoreRainLimit.Value;
         }
 
         /// <summary>

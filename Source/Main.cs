@@ -1,8 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using ColdDesertNights.Utility;
-using Harmony;
 using HugsLib;
 using RimWorld;
 using Verse;
@@ -30,28 +28,6 @@ namespace ColdDesertNights
             GetBiomes();
         }
 
-        [HarmonyPatch(typeof(GenTemperature), nameof(GenTemperature.OffsetFromSunCycle))]
-        // ReSharper disable once UnusedMember.Global
-        public static class OffsetFromSunCyclePatch
-        {
-            // ReSharper disable once UnusedMember.Global
-            public static bool Prefix(ref float __result, int absTick, int tile)
-            {
-                try
-                {
-                    var num = GenDate.DayPercent(absTick, Find.WorldGrid.LongLatOf(tile).x);
-                    var f = 6.28318548f * (num + 0.32f);
-                    __result = BiomeSettings[Find.WorldGrid.tiles[tile].biome].CalculateTemp(f);
-                    return false;
-                }
-                catch (Exception e)
-                {
-                    Log.Error($"Error getting biome for tile {tile} on world grid due to {e} - {e.StackTrace}");
-                    return true;
-                }
-            }
-        }
-
         /// <summary>
         /// Initializes the list of available <see cref="BiomeDef"/>s.
         /// </summary>
@@ -59,14 +35,15 @@ namespace ColdDesertNights
         {
             // Get our biome list
             var biomes = DefDatabase<BiomeDef>.AllDefs.Where(b => b.implemented && b.canBuildBase).ToList();
+            var weathers = DefDatabase<WeatherDef>.AllDefs.ToList();
 
             // Set our visibility field:
-            var currentBiomeSetting = Settings.GetHandle("tempCurBiome", "Biome".Translate(),
-                "ColdDesertNights_BiomeSelector".Translate(), biomes.First());
+            var currentBiomeSetting = Settings.GetHandle<BiomeDef>("tempCurBiome", "Biome".Translate(),
+                "ColdDesertNights_BiomeSelector".Translate());
             currentBiomeSetting.Unsaved = true;
-            currentBiomeSetting.CustomDrawer = new ListTypeDrawer<BiomeDef>(currentBiomeSetting, biomes, b => b.label).Draw;
+            currentBiomeSetting.CustomDrawer = new ListTypeDrawer<BiomeDef>(currentBiomeSetting, biomes, b => b?.label ?? "-- Select --").Draw;
 
-            BiomeSettings = biomes.ToDictionary(t => t, v => new BiomeData(Settings, v, () => currentBiomeSetting.Value.Equals(v)));
+            BiomeSettings = biomes.ToDictionary(t => t, v => new BiomeData(Settings, v, () => currentBiomeSetting.Value?.Equals(v) ?? false, weathers));
         }
     }
 }
