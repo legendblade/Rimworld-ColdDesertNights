@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text.RegularExpressions;
 using ColdDesertNights.Utility;
 using HugsLib.Settings;
@@ -29,7 +30,7 @@ namespace ColdDesertNights
         private Func<float, float, float> function;
         private float multiplier;
         private float offset;
-        private readonly Dictionary<WeatherDef, float> weatherPercs = new Dictionary<WeatherDef, float>();
+        private readonly Dictionary<WeatherDef, SettingHandle<float>> weatherCommonalities = new Dictionary<WeatherDef, SettingHandle<float>>();
 
         // Our setting handles
         private readonly SettingHandle<TemperatureFunctions> settingFunc;
@@ -78,13 +79,14 @@ namespace ColdDesertNights
             // Per-biome rain and snowfall multipliers
             foreach (var weather in weathers)
             {
+                var curCommonality =
+                    biome.baseWeatherCommonalities.FirstOrDefault(wc => wc.weather == weather)?.commonality ?? 0f;
                 var setting = settings.GetHandle($"weather_{key}_{weather.defName}",
                     "ColdDesertNights_BiomeWeather".Translate(GenText.ToTitleCaseSmart(weather.label)),
-                    "ColdDesertNights_BiomeWeather_Desc".Translate(), 100,
-                    Validators.IntRangeValidator(0, int.MaxValue));
+                    "ColdDesertNights_BiomeWeather_Desc".Translate(curCommonality), curCommonality,
+                    Validators.FloatRangeValidator(0f, float.MaxValue));
                 setting.VisibilityPredicate = visibilityFunc;
-                setting.OnValueChanged += value => weatherPercs[weather] = value * 0.01f;
-                weatherPercs[weather] = setting.Value * 0.01f;
+                weatherCommonalities[weather] = setting;
             }
 
             // If we're allowed to bypass the rain limits
@@ -174,11 +176,10 @@ namespace ColdDesertNights
         /// Adjusts the weather's commonality based on the percent settings
         /// </summary>
         /// <param name="weather">The weather to check</param>
-        /// <param name="currentCommonality">The current commonality score</param>
         /// <returns>The adjusted commonality</returns>
-        public float AdjustWeatherCommonality(WeatherDef weather, float currentCommonality)
+        public float GetWeatherCommonality(WeatherDef weather)
         {
-            return currentCommonality * weatherPercs[weather];
+            return weatherCommonalities[weather];
         }
 
         /// <summary>

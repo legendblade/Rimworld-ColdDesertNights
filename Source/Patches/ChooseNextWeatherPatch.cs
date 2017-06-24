@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Linq;
 using Harmony;
 using RimWorld;
 using Verse;
@@ -40,7 +39,8 @@ namespace ColdDesertNights.Patches
                     return false;
                 }
 
-                // If we didn't, use the default weather; suppress RW's complaining about not finding a random one
+                // If we didn't, use the default weather
+                Log.Warning("Unable to choose suitable weather and going with default; this may mean your biome specific settings don't produce a viable range of weathers.");
                 __result = biomeSetting.GetDefaultWeather();
                 return false;
             }
@@ -68,28 +68,23 @@ namespace ColdDesertNights.Patches
                 !weather.temperatureRange.Includes(weatherTemp) ||
                 weather.favorability < Favorability.Neutral && GenDate.DaysPassed < 8 ||
                 weather.rainRate > 0.100000001490116 && Find.TickManager.TicksGame < rainAllowed ||
-                weather.rainRate > 0.100000001490116 && map.gameConditionManager.ActiveConditions.Any(x => x.def.preventRain))
+                weather.rainRate > 0.100000001490116 && preventRain)
             {
                 return 0.0f;
             }
-            var biome = map.Biome;
 
             // Otherwise, find our base commonality:
-            var weatherCommonality = biome.baseWeatherCommonalities.FirstOrDefault(wc => wc.weather == weather);
-            if (weatherCommonality == null) return 0.0f;
-
-            // Adjust it
-            var commonality = biomeSetting.AdjustWeatherCommonality(weather, weatherCommonality.commonality);
+            var commonality = biomeSetting.GetWeatherCommonality(weather);
 
             // If we need to put out fires, increase rainfall considerably:
             if (map.fireWatcher.LargeFireDangerPresent && weather.rainRate > 0.100000001490116) commonality *= 20f;
 
             // Otherwise calculate our whole curve for rainfall and stuff...
-            if (weatherCommonality.weather.commonalityRainfallFactor != null)
+            if (weather.commonalityRainfallFactor != null)
             {
-                commonality *=
-                    weatherCommonality.weather.commonalityRainfallFactor.Evaluate(map.TileInfo.rainfall);
+                commonality *= weather.commonalityRainfallFactor.Evaluate(map.TileInfo.rainfall);
             }
+
             return commonality;
         }
     }

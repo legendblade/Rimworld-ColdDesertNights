@@ -11,7 +11,7 @@
   <ColdDesertNights_Function_Enum_Flattest>Flattest (slowest)</ColdDesertNights_Function_Enum_Flattest>
   <ColdDesertNights_BiomeSelector>Choose which biome to modify</ColdDesertNights_BiomeSelector>
   <ColdDesertNights_BiomeWeather>Chance of {0}</ColdDesertNights_BiomeWeather>
-  <ColdDesertNights_BiomeWeather_Desc>The percent by which to multiply a given weather's chance of occurring (default 100%).  At 0, this will completely disable the given weather.  
+  <ColdDesertNights_BiomeWeather_Desc>The weight this weather has when choosing a type of weather (default {0}).  At 0, this will completely disable the given weather in this biome.  
   
   Note:
   - This does not allow rain to occur at less than 0 degrees Celsius, nor snow to occur at temperatures higher than 0 degrees.
