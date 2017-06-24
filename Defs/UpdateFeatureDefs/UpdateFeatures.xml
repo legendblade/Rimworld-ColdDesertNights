@@ -10,6 +10,7 @@
 		<defName>ColdDesertNights_1_2_0</defName>
 		<assemblyVersion>1.2.0</assemblyVersion>
 		<content>- Added ability to control weather per-biome
+- Added ability to control seasonal temperature shift per-biome
         </content>
 	</HugsLib.UpdateFeatureDef>
 </Defs>
