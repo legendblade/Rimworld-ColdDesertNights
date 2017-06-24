@@ -54,6 +54,7 @@
     <Compile Include="BiomeData.cs" />
     <Compile Include="Patches\ChooseNextWeatherPatch.cs" />
     <Compile Include="Patches\OffsetFromSunCyclePatch.cs" />
+    <Compile Include="Patches\SeasonalShiftAmplitudeAtPatch.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Main.cs" />
     <Compile Include="TemperatureFunctions.cs" />
