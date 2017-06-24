@@ -35,14 +35,15 @@ namespace ColdDesertNights
         {
             // Get our biome list
             var biomes = DefDatabase<BiomeDef>.AllDefs.Where(b => b.implemented && b.canBuildBase).ToList();
+            var weathers = DefDatabase<WeatherDef>.AllDefs.ToList();
 
             // Set our visibility field:
-            var currentBiomeSetting = Settings.GetHandle("tempCurBiome", "Biome".Translate(),
-                "ColdDesertNights_BiomeSelector".Translate(), biomes.First());
+            var currentBiomeSetting = Settings.GetHandle<BiomeDef>("tempCurBiome", "Biome".Translate(),
+                "ColdDesertNights_BiomeSelector".Translate());
             currentBiomeSetting.Unsaved = true;
-            currentBiomeSetting.CustomDrawer = new ListTypeDrawer<BiomeDef>(currentBiomeSetting, biomes, b => b.label).Draw;
+            currentBiomeSetting.CustomDrawer = new ListTypeDrawer<BiomeDef>(currentBiomeSetting, biomes, b => b?.label ?? "-- Select --").Draw;
 
-            BiomeSettings = biomes.ToDictionary(t => t, v => new BiomeData(Settings, v, () => currentBiomeSetting.Value.Equals(v)));
+            BiomeSettings = biomes.ToDictionary(t => t, v => new BiomeData(Settings, v, () => currentBiomeSetting.Value?.Equals(v) ?? false, weathers));
         }
     }
 }
