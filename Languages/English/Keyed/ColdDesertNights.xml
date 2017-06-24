@@ -10,7 +10,7 @@
   <ColdDesertNights_Function_Enum_Flatter>Flatter (slower)</ColdDesertNights_Function_Enum_Flatter>
   <ColdDesertNights_Function_Enum_Flattest>Flattest (slowest)</ColdDesertNights_Function_Enum_Flattest>
   <ColdDesertNights_BiomeSelector>Choose which biome to modify</ColdDesertNights_BiomeSelector>
-  <ColdDesertNights_BiomeWeather>Chance of {0}</ColdDesertNights_BiomeWeather>
+  <ColdDesertNights_BiomeWeather>{0} Weather Weight</ColdDesertNights_BiomeWeather>
   <ColdDesertNights_BiomeWeather_Desc>The weight this weather has when choosing a type of weather (default {0}).  At 0, this will completely disable the given weather in this biome.  
   
   Note:
