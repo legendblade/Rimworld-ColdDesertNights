@@ -24,5 +24,7 @@
   <ColdDesertNights_WeatherTempMin_Desc>The minimum temperature in degrees Celsius we should pretend it currently is when choosing weather (ie: set this to 1 to force rain even at freezing temperatures; default -999)</ColdDesertNights_WeatherTempMin_Desc>
   <ColdDesertNights_WeatherTempMax>Max Weather Temperature</ColdDesertNights_WeatherTempMax>
   <ColdDesertNights_WeatherTempMax_Desc>The maximum temperature in degrees Celsius we should pretend it currently is when choosing weather (ie: set this to -1 to force snow even at non-freezing temperatures; default 999)</ColdDesertNights_WeatherTempMax_Desc>
+  <ColdDesertNights_Seasonal>Max Seasonal Shift</ColdDesertNights_Seasonal>
+  <ColdDesertNights_Seasonal_Desc>The maximum seasonal shift that occurs between summer and winter in this biome at the planet's poles (default 56).  This is adjusted by how far from the equator the tile is, and may be significantly less.</ColdDesertNights_Seasonal_Desc>
   
 </LanguageData>

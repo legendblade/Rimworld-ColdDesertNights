@@ -30,6 +30,10 @@ namespace ColdDesertNights
         private float multiplier;
         private float offset;
         private readonly Dictionary<WeatherDef, SettingHandle<float>> weatherCommonalities = new Dictionary<WeatherDef, SettingHandle<float>>();
+        private SimpleCurve seasonalTempVariationCurve = new SimpleCurve
+        {
+            new CurvePoint(0.0f, 3f), new CurvePoint(0.1f, 4f), new CurvePoint(1f, 28f)
+        };
 
         // Our setting handles
         private readonly SettingHandle<TemperatureFunctions> settingFunc;
@@ -38,6 +42,7 @@ namespace ColdDesertNights
         private readonly SettingHandle<bool> settingIgnoreRainLimit;
         private readonly SettingHandle<float> minWeatherTemperature;
         private readonly SettingHandle<float> maxWeatherTemperature;
+        private readonly SettingHandle<float> settingSeasonal;
 
         /// <summary>
         /// Initializes the biome data from the given <see cref="ModSettingsPack"/> settings
@@ -66,6 +71,10 @@ namespace ColdDesertNights
                 "ColdDesertNights_Offset".Translate(GenText.ToTitleCaseSmart(biome.label)),
                 "ColdDesertNights_Offset_Desc".Translate(), 0.0f,
                 Validators.FloatRangeValidator(-200, 200));
+            settingSeasonal = settings.GetHandle($"temp_seasonal_{key}",
+                "ColdDesertNights_Seasonal".Translate(GenText.ToTitleCaseSmart(biome.label)),
+                "ColdDesertNights_Seasonal_Desc".Translate(), 56.0f,
+                Validators.FloatRangeValidator(-400, 400));
 
             // Per-biome rain and snowfall multipliers
             foreach (var weather in weathers)
@@ -127,11 +136,13 @@ namespace ColdDesertNights
             // And use them to init our values...
             UpdateFunction(settingFunc.Value);
             RecalculateMultiplierAndOffset();
+            RecalculateSeasonalCurve(settingSeasonal.Value);
 
             // Sync them up when they get changed
             settingFunc.OnValueChanged += UpdateFunction;
             settingMultiplier.OnValueChanged += value => RecalculateMultiplierAndOffset();
             settingOffset.OnValueChanged += value => RecalculateMultiplierAndOffset();
+            settingSeasonal.OnValueChanged += RecalculateSeasonalCurve;
 
             // Set our visibility predicates:
             settingFunc.VisibilityPredicate =
@@ -139,7 +150,9 @@ namespace ColdDesertNights
                 settingOffset.VisibilityPredicate = 
                 settingIgnoreRainLimit.VisibilityPredicate =
                 minWeatherTemperature.VisibilityPredicate = 
-                maxWeatherTemperature.VisibilityPredicate = visibilityFunc;
+                maxWeatherTemperature.VisibilityPredicate = 
+                settingSeasonal.VisibilityPredicate =
+                visibilityFunc;
         }
 
         /// <summary>
@@ -150,6 +163,16 @@ namespace ColdDesertNights
         public float CalculateTemp(float input)
         {
             return function.Invoke(input, multiplier) + offset;
+        }
+
+        /// <summary>
+        /// Calculates the seasonal temperature for the biome.
+        /// </summary>
+        /// <param name="input">The value to calculate the temperature at</param>
+        /// <returns>The calculated temperature</returns>
+        public float CalculateSeasonalTemp(float input)
+        {
+            return seasonalTempVariationCurve.Evaluate(input);
         }
 
         /// <summary>
@@ -199,6 +222,22 @@ namespace ColdDesertNights
             multiplier = settingMultiplier.Value / 2;
             offset = 7f - multiplier + settingOffset.Value;
         }
-    }
 
+        /// <summary>
+        /// Recalculates the seasonal temperature curve in this biome
+        /// </summary>
+        /// <param name="value">The maximal shift</param>
+        private void RecalculateSeasonalCurve(float value)
+        {
+            value = value / 2;
+            var shift = value / 28;
+
+            seasonalTempVariationCurve = new SimpleCurve
+            {
+                new CurvePoint(0.0f, 3f*shift),
+                new CurvePoint(0.1f, 4f*shift),
+                new CurvePoint(1f, value)
+            };
+        }
+    }
 }
