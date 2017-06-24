@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<Defs>
+	<HugsLib.UpdateFeatureDef Abstract="true" Name="UpdateFeatureBase">
+		<modNameReadable>Cold Desert Nights</modNameReadable>
+		<modIdentifier>ColdDesertNights</modIdentifier>
+		<linkUrl>https://github.com/legendblade/Rimworld-ColdDesertNights</linkUrl>
+	</HugsLib.UpdateFeatureDef>
+	
+	<HugsLib.UpdateFeatureDef ParentName="UpdateFeatureBase">
+		<defName>ColdDesertNights_1_2_0</defName>
+		<assemblyVersion>1.2.0</assemblyVersion>
+		<content>- Added ability to control weather per-biome
+        </content>
+	</HugsLib.UpdateFeatureDef>
+</Defs>
