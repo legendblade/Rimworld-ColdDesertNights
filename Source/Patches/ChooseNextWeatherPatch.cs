@@ -24,7 +24,7 @@ namespace ColdDesertNights.Patches
                 // If we're in the tutorial, just let it be
                 if (TutorSystem.TutorialMode)
                 {
-                    __result = biomeSetting.GetDefaultWeather();
+                    __result = WeatherDefOf.Clear;
                     return false;
                 }
 
@@ -40,8 +40,8 @@ namespace ColdDesertNights.Patches
                 }
 
                 // If we didn't, use the default weather
-                Log.Warning("Unable to choose suitable weather and going with default; this may mean your biome specific settings don't produce a viable range of weathers.");
-                __result = biomeSetting.GetDefaultWeather();
+                Log.Warning("Unable to choose suitable weather; this may mean your biome specific settings don't produce a viable range of weathers.");
+                __result = WeatherDefOf.Clear;
                 return false;
             }
             catch (Exception)

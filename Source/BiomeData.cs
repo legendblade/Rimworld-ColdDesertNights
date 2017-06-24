@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
-using ColdDesertNights.Utility;
 using HugsLib.Settings;
 using RimWorld;
 using UnityEngine;
@@ -36,7 +35,6 @@ namespace ColdDesertNights
         private readonly SettingHandle<TemperatureFunctions> settingFunc;
         private readonly SettingHandle<float> settingMultiplier;
         private readonly SettingHandle<float> settingOffset;
-        private readonly SettingHandle<WeatherDef> settingDefaultWeather;
         private readonly SettingHandle<bool> settingIgnoreRainLimit;
         private readonly SettingHandle<float> minWeatherTemperature;
         private readonly SettingHandle<float> maxWeatherTemperature;
@@ -68,13 +66,6 @@ namespace ColdDesertNights
                 "ColdDesertNights_Offset".Translate(GenText.ToTitleCaseSmart(biome.label)),
                 "ColdDesertNights_Offset_Desc".Translate(), 0.0f,
                 Validators.FloatRangeValidator(-200, 200));
-
-            // Default weather
-            settingDefaultWeather = settings.GetHandle($"default_weather_{key}", 
-                "ColdDesertNights_DefaultBiomeWeather".Translate(),
-                "ColdDesertNights_DefaultBiomeWeather_Desc".Translate(), WeatherDefOf.Clear);
-            settingDefaultWeather.CustomDrawer =
-                new ListTypeDrawer<WeatherDef>(settingDefaultWeather, weathers, b => b?.label ?? "-- Select --").Draw;
 
             // Per-biome rain and snowfall multipliers
             foreach (var weather in weathers)
@@ -147,7 +138,6 @@ namespace ColdDesertNights
                 settingMultiplier.VisibilityPredicate = 
                 settingOffset.VisibilityPredicate = 
                 settingIgnoreRainLimit.VisibilityPredicate =
-                settingDefaultWeather.VisibilityPredicate =
                 minWeatherTemperature.VisibilityPredicate = 
                 maxWeatherTemperature.VisibilityPredicate = visibilityFunc;
         }
@@ -180,15 +170,6 @@ namespace ColdDesertNights
         public float GetWeatherCommonality(WeatherDef weather)
         {
             return weatherCommonalities[weather];
-        }
-
-        /// <summary>
-        /// Gets this biome's default weather
-        /// </summary>
-        /// <returns>The weather to default to if no commonalities exist</returns>
-        public WeatherDef GetDefaultWeather()
-        {
-            return settingDefaultWeather.Value;
         }
 
         /// <summary>
