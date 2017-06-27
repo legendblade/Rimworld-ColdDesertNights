@@ -25,24 +25,42 @@ namespace ColdDesertNights
                 }
             };
 
+        /// <summary>
+        /// Lists off the default temperatures per condition.  This, unfortunately, can't be
+        /// grabbed automatically due to how the vanilla code handles it
+        /// </summary>
+        private static readonly Dictionary<GameConditionDef, float> DefaultConditionTemps = 
+            new Dictionary<GameConditionDef, float>
+            {
+                { GameConditionDefOf.ColdSnap, -20f },
+                { GameConditionDefOf.HeatWave, 17f }
+            };
+
         // Our actual values
         private Func<float, float, float> function;
         private float multiplier;
         private float offset;
-        private readonly Dictionary<WeatherDef, SettingHandle<float>> weatherCommonalities = new Dictionary<WeatherDef, SettingHandle<float>>();
+
+        private readonly Dictionary<WeatherDef, SettingHandle<float>> weatherCommonalities =
+            new Dictionary<WeatherDef, SettingHandle<float>>();
+        private readonly Dictionary<GameConditionDef, SettingHandle<float>> conditionOffsets =
+            new Dictionary<GameConditionDef, SettingHandle<float>>();
+
         private SimpleCurve seasonalTempVariationCurve = new SimpleCurve
         {
-            new CurvePoint(0.0f, 3f), new CurvePoint(0.1f, 4f), new CurvePoint(1f, 28f)
+            new CurvePoint(0.0f, 3f),
+            new CurvePoint(0.1f, 4f),
+            new CurvePoint(1f, 28f)
         };
 
         // Our setting handles
-        private readonly SettingHandle<TemperatureFunctions> settingFunc;
-        private readonly SettingHandle<float> settingMultiplier;
-        private readonly SettingHandle<float> settingOffset;
-        private readonly SettingHandle<bool> settingIgnoreRainLimit;
-        private readonly SettingHandle<float> minWeatherTemperature;
-        private readonly SettingHandle<float> maxWeatherTemperature;
-        private readonly SettingHandle<float> settingSeasonal;
+        private SettingHandle<TemperatureFunctions> settingFunc;
+        private SettingHandle<float> settingMultiplier;
+        private SettingHandle<float> settingOffset;
+        private SettingHandle<bool> settingIgnoreRainLimit;
+        private SettingHandle<float> minWeatherTemperature;
+        private SettingHandle<float> maxWeatherTemperature;
+        private SettingHandle<float> settingSeasonal;
 
         /// <summary>
         /// Initializes the biome data from the given <see cref="ModSettingsPack"/> settings
@@ -51,59 +69,22 @@ namespace ColdDesertNights
         /// <param name="settings">The setting pack to use</param>
         /// <param name="biome">The biome to base this off of</param>
         /// <param name="visibilityFunc">Function which returns if we should display this now</param>
-        /// <param name="weathers"></param>
-        public BiomeData(ModSettingsPack settings, BiomeDef biome, SettingHandle.ShouldDisplay visibilityFunc, List<WeatherDef> weathers)
+        /// <param name="currentPane">The current settings pane we're on</param>
+        /// <param name="weathers">A list of weathers to iterate through</param>
+        /// <param name="conditions">A list of game conditions to iterate through</param>
+        public BiomeData(ModSettingsPack settings, BiomeDef biome, SettingHandle.ShouldDisplay visibilityFunc,
+            SettingHandle<SettingsPane> currentPane, List<WeatherDef> weathers, List<GameConditionDef> conditions)
         {
             // Build out the key:
             var key = Regex.Replace(biome.defName, "[^A-Za-z]", "");
 
-            // Create our settings handles:
-            settingFunc = settings.GetHandle($"temp_func_{key}",
-                "ColdDesertNights_Function".Translate(GenText.ToTitleCaseSmart(biome.label)),
-                "ColdDesertNights_Function_Desc".Translate(),
-                TemperatureFunctions.Vanilla, null, "ColdDesertNights_Function_Enum_");
-            settingMultiplier = settings.GetHandle(
-                $"temp_multiplier_{key}",
-                "ColdDesertNights_Multiplier".Translate(GenText.ToTitleCaseSmart(biome.label)),
-                "ColdDesertNights_Multiplier_Desc".Translate(), 14.0f,
-                Validators.FloatRangeValidator(-200, 200));
-            settingOffset = settings.GetHandle($"temp_offset_{key}",
-                "ColdDesertNights_Offset".Translate(GenText.ToTitleCaseSmart(biome.label)),
-                "ColdDesertNights_Offset_Desc".Translate(), 0.0f,
-                Validators.FloatRangeValidator(-200, 200));
-            settingSeasonal = settings.GetHandle($"temp_seasonal_{key}",
-                "ColdDesertNights_Seasonal".Translate(GenText.ToTitleCaseSmart(biome.label)),
-                "ColdDesertNights_Seasonal_Desc".Translate(), 56.0f,
-                Validators.FloatRangeValidator(-400, 400));
-
-            // Per-biome rain and snowfall multipliers
-            foreach (var weather in weathers)
-            {
-                var curCommonality =
-                    biome.baseWeatherCommonalities.FirstOrDefault(wc => wc.weather == weather)?.commonality ?? 0f;
-                var setting = settings.GetHandle($"weather_{key}_{weather.defName}",
-                    "ColdDesertNights_BiomeWeather".Translate(GenText.ToTitleCaseSmart(weather.label)),
-                    "ColdDesertNights_BiomeWeather_Desc".Translate(curCommonality), curCommonality,
-                    Validators.FloatRangeValidator(0f, float.MaxValue));
-                setting.VisibilityPredicate = visibilityFunc;
-                weatherCommonalities[weather] = setting;
-            }
-
-            // If we're allowed to bypass the rain limits
-            settingIgnoreRainLimit = settings.GetHandle(
-                $"ignore_rain_limit_{key}",
-                "ColdDesertNights_IgnoreRainLimit".Translate(),
-                "ColdDesertNights_IgnoreRainLimit_Desc".Translate(), false);
-
-            // Force weather into the given range
-            minWeatherTemperature = settings.GetHandle(
-                $"weather_temp_min_{key}",
-                "ColdDesertNights_WeatherTempMin".Translate(),
-                "ColdDesertNights_WeatherTempMin_Desc".Translate(), -999f);
-            maxWeatherTemperature = settings.GetHandle(
-                $"weather_temp_max_{key}",
-                "ColdDesertNights_WeatherTempMax".Translate(),
-                "ColdDesertNights_WeatherTempMax_Desc".Translate(), 999f);
+            // Init all of our various settings
+            InitGeneralSettings(settings, biome, key,
+                () => currentPane.Value == SettingsPane.General && visibilityFunc());
+            InitWeatherSettings(settings, biome, key, weathers,
+                () => currentPane.Value == SettingsPane.Weather && visibilityFunc());
+            InitConditionSettings(settings, biome, key, conditions,
+                () => currentPane.Value == SettingsPane.Conditions && visibilityFunc());
 
             // Port things from the v1 labeling:
             var v1Key = Regex.Replace(biome.label, "[^A-Za-z]", ""); // <-- This was a bad plan.
@@ -131,28 +112,6 @@ namespace ColdDesertNights
                     settings.TryRemoveUnclaimedValue($"temp_offset_{v1Key}");
                 }
             }
-
-
-            // And use them to init our values...
-            UpdateFunction(settingFunc.Value);
-            RecalculateMultiplierAndOffset();
-            RecalculateSeasonalCurve(settingSeasonal.Value);
-
-            // Sync them up when they get changed
-            settingFunc.OnValueChanged += UpdateFunction;
-            settingMultiplier.OnValueChanged += value => RecalculateMultiplierAndOffset();
-            settingOffset.OnValueChanged += value => RecalculateMultiplierAndOffset();
-            settingSeasonal.OnValueChanged += RecalculateSeasonalCurve;
-
-            // Set our visibility predicates:
-            settingFunc.VisibilityPredicate =
-                settingMultiplier.VisibilityPredicate = 
-                settingOffset.VisibilityPredicate = 
-                settingIgnoreRainLimit.VisibilityPredicate =
-                minWeatherTemperature.VisibilityPredicate = 
-                maxWeatherTemperature.VisibilityPredicate = 
-                settingSeasonal.VisibilityPredicate =
-                visibilityFunc;
         }
 
         /// <summary>
@@ -205,6 +164,23 @@ namespace ColdDesertNights
         }
 
         /// <summary>
+        /// Gets the temperature offset for a given game condition; returns false if we should use the
+        /// vanilla cacluatation instead
+        /// </summary>
+        /// <param name="condition">The condition to check for</param>
+        /// <returns>True if we overwrote the value, false if we should use vanilla instead.</returns>
+        public float GetBiomeConditionTemperatureOffset(GameCondition condition)
+        {
+            // Check if we have a value:
+            SettingHandle<float> offsetMax;
+            if (!conditionOffsets.TryGetValue(condition.def, out offsetMax) || offsetMax.HasDefaultValue()) return condition.TemperatureOffset();
+
+            // Otherwise, do the thing:
+            return GameConditionUtility.LerpInOutValue(condition.TicksPassed, condition.TicksLeft, 12000f,
+                offsetMax);
+        }
+
+        /// <summary>
         /// Safely updates our function, defaulting back to vanilla if it couldn't be found
         /// </summary>
         /// <param name="type">The type to try and use</param>
@@ -234,10 +210,128 @@ namespace ColdDesertNights
 
             seasonalTempVariationCurve = new SimpleCurve
             {
-                new CurvePoint(0.0f, 3f*shift),
-                new CurvePoint(0.1f, 4f*shift),
+                new CurvePoint(0.0f, 3f * shift),
+                new CurvePoint(0.1f, 4f * shift),
                 new CurvePoint(1f, value)
             };
+        }
+
+        /// <summary>
+        /// Initalizes all of our 'general' tab settings.
+        /// </summary>
+        /// <param name="settings">The settings instance to use</param>
+        /// <param name="biome">The biome we're working with</param>
+        /// <param name="key">The key to use</param>
+        /// <param name="visibilityFunc">Our base visibility function</param>
+        private void InitGeneralSettings(ModSettingsPack settings, BiomeDef biome, string key,
+            SettingHandle.ShouldDisplay visibilityFunc)
+        {
+            settingFunc = settings.GetHandle($"temp_func_{key}",
+                "ColdDesertNights_Function".Translate(GenText.ToTitleCaseSmart(biome.label)),
+                "ColdDesertNights_Function_Desc".Translate(),
+                TemperatureFunctions.Vanilla, null, "ColdDesertNights_Function_Enum_");
+            settingMultiplier = settings.GetHandle(
+                $"temp_multiplier_{key}",
+                "ColdDesertNights_Multiplier".Translate(GenText.ToTitleCaseSmart(biome.label)),
+                "ColdDesertNights_Multiplier_Desc".Translate(), 14.0f,
+                Validators.FloatRangeValidator(-200, 200));
+            settingOffset = settings.GetHandle($"temp_offset_{key}",
+                "ColdDesertNights_Offset".Translate(GenText.ToTitleCaseSmart(biome.label)),
+                "ColdDesertNights_Offset_Desc".Translate(), 0.0f,
+                Validators.FloatRangeValidator(-200, 200));
+            settingSeasonal = settings.GetHandle($"temp_seasonal_{key}",
+                "ColdDesertNights_Seasonal".Translate(GenText.ToTitleCaseSmart(biome.label)),
+                "ColdDesertNights_Seasonal_Desc".Translate(), 56.0f,
+                Validators.FloatRangeValidator(-400, 400));
+
+            settingFunc.VisibilityPredicate =
+                settingMultiplier.VisibilityPredicate =
+                    settingOffset.VisibilityPredicate =
+                        settingSeasonal.VisibilityPredicate =
+                            visibilityFunc;
+
+
+            // And use them to init our values...
+            UpdateFunction(settingFunc.Value);
+            RecalculateMultiplierAndOffset();
+            RecalculateSeasonalCurve(settingSeasonal.Value);
+
+            // Sync them up when they get changed
+            settingFunc.OnValueChanged += UpdateFunction;
+            settingMultiplier.OnValueChanged += value => RecalculateMultiplierAndOffset();
+            settingOffset.OnValueChanged += value => RecalculateMultiplierAndOffset();
+            settingSeasonal.OnValueChanged += RecalculateSeasonalCurve;
+        }
+
+        /// <summary>
+        /// Initialize condition specific settings
+        /// </summary>
+        /// <param name="settings">The settings instance to use</param>
+        /// <param name="biome">The biome we're working with</param>
+        /// <param name="key">The key to use</param>
+        /// <param name="conditions">The conditions to iterate through</param>
+        /// <param name="visibilityFunc">Our base visibility function</param>
+        private void InitConditionSettings(ModSettingsPack settings, BiomeDef biome, string key,
+            List<GameConditionDef> conditions, SettingHandle.ShouldDisplay visibilityFunc)
+        {
+            // Iterate through each of our conditions...
+            foreach (var condition in conditions)
+            {
+                var setting = settings.GetHandle($"condition_{key}_{condition.defName}_offset",
+                    "ColdDesertNights_ConditionTemp".Translate(GenText.ToTitleCaseSmart(biome.label)),
+                    "ColdDesertNights_ConditionTemp".Translate(),
+                    DefaultConditionTemps.ContainsKey(condition) ? DefaultConditionTemps[condition] : 0f,
+                    Validators.FloatRangeValidator(-400, 400));
+                setting.VisibilityPredicate = visibilityFunc;
+                conditionOffsets[condition] = setting;
+            }
+        }
+
+        /// <summary>
+        /// Initialize weather specific settings
+        /// </summary>
+        /// <param name="settings">The settings instance to use</param>
+        /// <param name="biome">The biome we're working with</param>
+        /// <param name="key">The key to use</param>
+        /// <param name="weathers">The weathers to iterate through</param>
+        /// <param name="visibilityFunc">Our base visibility function</param>
+        private void InitWeatherSettings(ModSettingsPack settings, BiomeDef biome, string key, List<WeatherDef> weathers,
+            SettingHandle.ShouldDisplay visibilityFunc)
+        {
+            // Per-biome rain and snowfall multipliers
+            foreach (var weather in weathers)
+            {
+                var curCommonality =
+                    biome.baseWeatherCommonalities.FirstOrDefault(wc => wc.weather == weather)?.commonality ?? 0f;
+                var setting = settings.GetHandle($"weather_{key}_{weather.defName}",
+                    "ColdDesertNights_BiomeWeather".Translate(GenText.ToTitleCaseSmart(weather.label)),
+                    "ColdDesertNights_BiomeWeather_Desc".Translate(curCommonality), curCommonality,
+                    Validators.FloatRangeValidator(0f, float.MaxValue));
+                setting.VisibilityPredicate = visibilityFunc;
+                weatherCommonalities[weather] = setting;
+            }
+
+            // If we're allowed to bypass the rain limits
+            settingIgnoreRainLimit = settings.GetHandle(
+                $"ignore_rain_limit_{key}",
+                "ColdDesertNights_IgnoreRainLimit".Translate(),
+                "ColdDesertNights_IgnoreRainLimit_Desc".Translate(), false);
+
+            // Force weather into the given range
+            minWeatherTemperature = settings.GetHandle(
+                $"weather_temp_min_{key}",
+                "ColdDesertNights_WeatherTempMin".Translate(),
+                "ColdDesertNights_WeatherTempMin_Desc".Translate(), -999f);
+            maxWeatherTemperature = settings.GetHandle(
+                $"weather_temp_max_{key}",
+                "ColdDesertNights_WeatherTempMax".Translate(),
+                "ColdDesertNights_WeatherTempMax_Desc".Translate(), 999f);
+
+            // Set our visibility predicates:
+            settingIgnoreRainLimit.VisibilityPredicate =
+                minWeatherTemperature.VisibilityPredicate =
+                    maxWeatherTemperature.VisibilityPredicate =
+                        visibilityFunc;
         }
     }
 }
