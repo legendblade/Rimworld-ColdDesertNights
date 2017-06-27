@@ -19,6 +19,7 @@
 		<assemblyVersion>1.3.0</assemblyVersion>
 		<content>- Added better grouping for settings
 - Added adjustment settings for the Cold Snap / Heat Wave events
+- Added more settings for controlling the weather
         </content>
 	</HugsLib.UpdateFeatureDef>
 </Defs>
