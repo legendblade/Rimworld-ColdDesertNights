@@ -13,4 +13,12 @@
 - Added ability to control seasonal temperature shift per-biome
         </content>
 	</HugsLib.UpdateFeatureDef>
+	
+	<HugsLib.UpdateFeatureDef ParentName="UpdateFeatureBase">
+		<defName>ColdDesertNights_1_3_0</defName>
+		<assemblyVersion>1.3.0</assemblyVersion>
+		<content>- Added better grouping for settings
+- Added adjustment settings for the Cold Snap / Heat Wave events
+        </content>
+	</HugsLib.UpdateFeatureDef>
 </Defs>
