@@ -61,6 +61,7 @@
     <Compile Include="SettingsPane.cs" />
     <Compile Include="TemperatureFunctions.cs" />
     <Compile Include="Utility\ListTypeDrawer.cs" />
+    <Compile Include="WeatherData.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>

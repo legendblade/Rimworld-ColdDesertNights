@@ -55,7 +55,13 @@ namespace ColdDesertNights
             currentPane.Unsaved = true;
             currentPane.VisibilityPredicate = () => currentBiomeSetting.Value != null;
 
-            BiomeSettings = biomes.ToDictionary(t => t, v => new BiomeData(Settings, v, () => currentBiomeSetting.Value?.Equals(v) ?? false, currentPane, weathers, conditions));
+            var currentWeather = Settings.GetHandle<WeatherDef>("currentWeather", "Weather".Translate(),
+                "ColdDesertNights_WeatherSelector".Translate());
+            currentWeather.Unsaved = true;
+            currentWeather.CustomDrawer = new ListTypeDrawer<WeatherDef>(currentWeather, weathers, b => b.label, true).Draw;
+            currentWeather.VisibilityPredicate = () => currentPane.Value == SettingsPane.Weather;
+
+            BiomeSettings = biomes.ToDictionary(t => t, v => new BiomeData(Settings, v, () => currentBiomeSetting.Value?.Equals(v) ?? false, currentPane, currentWeather, weathers, conditions));
         }
     }
 }
