@@ -1,5 +1,5 @@
-﻿using System.Collections.Generic;
-using System.Linq;
+﻿using System.Linq;
+using ColdDesertNights.Utility;
 using HugsLib.Settings;
 using RimWorld;
 using Verse;
@@ -28,19 +28,21 @@ namespace ColdDesertNights
                 biome.baseWeatherCommonalities.FirstOrDefault(wc => wc.weather == weather)?.commonality ?? 0f;
 
             // Init our settings...
+            SpacerDrawer.GenerateSpacer(GenText.ToTitleCaseSmart(weather.label), settings, visibilityFunc);
+
             commonality = settings.GetHandle($"weather_{biome.defName}_{weather.defName}",
-                "ColdDesertNights_BiomeWeather".Translate(GenText.ToTitleCaseSmart(weather.label)),
+                "    " + "ColdDesertNights_BiomeWeather".Translate(),
                 "ColdDesertNights_BiomeWeather_Desc".Translate(curCommonality), curCommonality,
                 Validators.FloatRangeValidator(0f, float.MaxValue));
 
             allowRepeating = settings.GetHandle($"weather_{biome.defName}_{weather.defName}_repeating",
-                "ColdDesertNights_BiomeWeatherRepeating".Translate(GenText.ToTitleCaseSmart(weather.label)),
+                "    " + "ColdDesertNights_BiomeWeatherRepeating".Translate(),
                 "ColdDesertNights_BiomeWeatherRepeating_Desc".Translate(
                     (weather.repeatable ? "ColdDesertNights_Checked" : "ColdDesertNights_Unchecked").Translate()),
                 weather.repeatable);
 
             allowEarly = settings.GetHandle($"weather_{biome.defName}_{weather.defName}_early",
-                "ColdDesertNights_BiomeWeatherEarly".Translate(GenText.ToTitleCaseSmart(weather.label)),
+                "    " + "ColdDesertNights_BiomeWeatherEarly".Translate(),
                 "ColdDesertNights_BiomeWeatherEarly_Desc".Translate(
                     (Favorability.Neutral <= weather.favorability ? "ColdDesertNights_Checked" : "ColdDesertNights_Unchecked").Translate()),
                 Favorability.Neutral <= weather.favorability);

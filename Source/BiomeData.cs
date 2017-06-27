@@ -70,11 +70,10 @@ namespace ColdDesertNights
         /// <param name="biome">The biome to base this off of</param>
         /// <param name="visibilityFunc">Function which returns if we should display this now</param>
         /// <param name="currentPane">The current settings pane we're on</param>
-        /// <param name="currentWeather">The current weather to modify (if we're on the weather panel)</param>
         /// <param name="weathers">A list of weathers to iterate through</param>
         /// <param name="conditions">A list of game conditions to iterate through</param>
         public BiomeData(ModSettingsPack settings, BiomeDef biome, SettingHandle.ShouldDisplay visibilityFunc, 
-            SettingHandle<SettingsPane> currentPane, SettingHandle<WeatherDef> currentWeather, 
+            SettingHandle<SettingsPane> currentPane, 
             List<WeatherDef> weathers, List<GameConditionDef> conditions)
         {
             // Build out the key:
@@ -84,7 +83,7 @@ namespace ColdDesertNights
             InitGeneralSettings(settings, biome, key,
                 () => currentPane.Value == SettingsPane.General && visibilityFunc());
             InitWeatherSettings(settings, biome, key, weathers,
-                () => currentPane.Value == SettingsPane.Weather && visibilityFunc(), currentWeather);
+                () => currentPane.Value == SettingsPane.Weather && visibilityFunc());
             InitConditionSettings(settings, biome, key, conditions,
                 () => currentPane.Value == SettingsPane.Conditions && visibilityFunc());
 
@@ -297,31 +296,31 @@ namespace ColdDesertNights
         /// <param name="key">The key to use</param>
         /// <param name="weathers">The weathers to iterate through</param>
         /// <param name="visibilityFunc">Our base visibility function</param>
-        /// <param name="currentWeather">The weather we're modifying</param>
         private void InitWeatherSettings(ModSettingsPack settings, BiomeDef biome, string key, List<WeatherDef> weathers, 
-            SettingHandle.ShouldDisplay visibilityFunc, SettingHandle<WeatherDef> currentWeather)
+            SettingHandle.ShouldDisplay visibilityFunc)
         {
             // Per-biome rain and snowfall multipliers
             foreach (var weather in weathers)
             {
-                weatherCommonalities[weather] = new WeatherData(settings, biome, weather,
-                    () => weather.Equals(currentWeather.Value) && visibilityFunc());
+                weatherCommonalities[weather] = new WeatherData(settings, biome, weather, visibilityFunc);
             }
+
+            SpacerDrawer.GenerateSpacer("ColdDesertNights_WeatherMiscSettings".Translate(), settings, visibilityFunc);
 
             // If we're allowed to bypass the rain limits
             settingIgnoreRainLimit = settings.GetHandle(
                 $"ignore_rain_limit_{key}",
-                "ColdDesertNights_IgnoreRainLimit".Translate(),
+                "    " + "ColdDesertNights_IgnoreRainLimit".Translate(),
                 "ColdDesertNights_IgnoreRainLimit_Desc".Translate(), false);
 
             // Force weather into the given range
             minWeatherTemperature = settings.GetHandle(
                 $"weather_temp_min_{key}",
-                "ColdDesertNights_WeatherTempMin".Translate(),
+                "    " + "ColdDesertNights_WeatherTempMin".Translate(),
                 "ColdDesertNights_WeatherTempMin_Desc".Translate(), -999f);
             maxWeatherTemperature = settings.GetHandle(
                 $"weather_temp_max_{key}",
-                "ColdDesertNights_WeatherTempMax".Translate(),
+                "    " + "ColdDesertNights_WeatherTempMax".Translate(),
                 "ColdDesertNights_WeatherTempMax_Desc".Translate(), 999f);
 
             // Set our visibility predicates:
