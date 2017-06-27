@@ -278,8 +278,8 @@ namespace ColdDesertNights
             foreach (var condition in conditions)
             {
                 var setting = settings.GetHandle($"condition_{key}_{condition.defName}_offset",
-                    "ColdDesertNights_ConditionTemp".Translate(GenText.ToTitleCaseSmart(biome.label)),
-                    "ColdDesertNights_ConditionTemp".Translate(),
+                    "ColdDesertNights_ConditionTemp".Translate(GenText.ToTitleCaseSmart(condition.label)),
+                    "ColdDesertNights_ConditionTemp_Desc".Translate(),
                     DefaultConditionTemps.ContainsKey(condition) ? DefaultConditionTemps[condition] : 0f,
                     Validators.FloatRangeValidator(-400, 400));
                 setting.VisibilityPredicate = visibilityFunc;
