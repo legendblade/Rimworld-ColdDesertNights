@@ -46,7 +46,7 @@ namespace ColdDesertNights
             var currentBiomeSetting = Settings.GetHandle<BiomeDef>("tempCurBiome", "Biome".Translate(),
                 "ColdDesertNights_BiomeSelector".Translate());
             currentBiomeSetting.Unsaved = true;
-            currentBiomeSetting.CustomDrawer = new ListTypeDrawer<BiomeDef>(currentBiomeSetting, biomes, b => b?.label ?? "-- Select --").Draw;
+            currentBiomeSetting.CustomDrawer = new ListTypeDrawer<BiomeDef>(currentBiomeSetting, biomes, b => b.label, true).Draw;
 
             var currentPane = Settings.GetHandle("currentPane",
                 "ColdDesertNights_Pane".Translate(),

@@ -33,4 +33,5 @@
   <ColdDesertNights_Pane_Enum_Conditions>Game Conditions</ColdDesertNights_Pane_Enum_Conditions>
   <ColdDesertNights_ConditionTemp>{0}'s Temperature</ColdDesertNights_ConditionTemp>
   <ColdDesertNights_ConditionTemp_Desc>The temperature increase/decrease to apply when this condition is in effect.</ColdDesertNights_ConditionTemp_Desc>
+  <ColdDesertNights_SelectList_Default>-- Select --</ColdDesertNights_SelectList_Default>
 </LanguageData>

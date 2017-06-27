@@ -12,26 +12,28 @@ namespace ColdDesertNights.Utility
         private readonly SettingHandle<T> handle;
         private readonly List<T> options;
         private readonly Func<T, string> getLabelFunc;
+        private readonly bool includeDefaultOption;
         private bool hasChanged;
 
-        public ListTypeDrawer(SettingHandle<T> handle, List<T> options, Func<T, string> getLabelFunc)
+        public ListTypeDrawer(SettingHandle<T> handle, IEnumerable<T> options, Func<T, string> getLabelFunc, bool includeDefaultOption)
         {
             this.handle = handle;
-            this.options = options;
+            this.options = new List<T>(options);
             this.getLabelFunc = getLabelFunc;
+            this.includeDefaultOption = includeDefaultOption;
         }
 
         public bool Draw(Rect controlRect)
         {
             // Get our current label and try to draw it to the screen:
-            var label = GenText.ToTitleCaseSmart(getLabelFunc.Invoke(handle.Value));
+            var label = GetLabel(handle.Value);
             if (!Widgets.ButtonText(controlRect, label)) return true;
 
             // Iterate our options:
-            var opts = options.Select(name => new {name, optLabel = GenText.ToTitleCaseSmart(getLabelFunc.Invoke(name))})
-                .Select(t => new FloatMenuOption(t.optLabel, () =>
+            var opts = options
+                .Select(t => new FloatMenuOption(GetLabel(t), () =>
                 {
-                    handle.Value = t.name;
+                    handle.Value = t;
                     hasChanged = true;
                 })).ToList();
 
@@ -41,6 +43,18 @@ namespace ColdDesertNights.Utility
 
             hasChanged = false;
             return true;
+        }
+
+        /// <summary>
+        /// Gets the label for the given instance
+        /// </summary>
+        /// <param name="opt">The option to get the label for</param>
+        /// <returns>The text</returns>
+        private string GetLabel(T opt)
+        {
+            return opt == null || includeDefaultOption && EqualityComparer<T>.Default.Equals(opt, default(T))
+                ? "ColdDesertNights_SelectList_Default".Translate()
+                : GenText.ToTitleCaseSmart(getLabelFunc.Invoke(opt));
         }
     }
 }
