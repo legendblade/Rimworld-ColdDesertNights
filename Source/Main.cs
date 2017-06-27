@@ -53,6 +53,7 @@ namespace ColdDesertNights
                 "ColdDesertNights_Pane_Desc".Translate(),
                 SettingsPane.General, null, "ColdDesertNights_Pane_Enum_");
             currentPane.Unsaved = true;
+            currentPane.VisibilityPredicate = () => currentBiomeSetting.Value != null;
 
             BiomeSettings = biomes.ToDictionary(t => t, v => new BiomeData(Settings, v, () => currentBiomeSetting.Value?.Equals(v) ?? false, currentPane, weathers, conditions));
         }
